@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  database: 
+    image: postgres
+    container_name: database_measure_api
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=measure
+      - POSTGRES_PASSWORD=measure
+      - POSTGRES_DB=measure_api
+    volumes:
+      - pgdata:/data/postgres
+
+  app:
+    build: .
+    container_name: app_measure_api
+    ports: 
+      - 3000:3000
+    volumes:
+      - .:/usr/app
+    links:
+      - database
+    depends_on:
+      - database
+
+volumes:
+  pgdata:
+    driver: local
