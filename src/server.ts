@@ -9,16 +9,20 @@ import fetch, { Headers } from "node-fetch";
 (global as any).Headers = Headers;
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const prisma = new PrismaClient();
 const app = express();
+const port = 3000;
 
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // Limite de 10MB
 
 app.use(express.json());
 
 
-// Leitura da imagem em base64
+// ---------------- Leitura da imagem em base64
 interface GenerativePart {
   inlineData: {
     data: string;
@@ -35,12 +39,14 @@ function createGenerativePart(base64Data: string, mimeType: string): GenerativeP
   };
 }
 
-async function run(base64Image: string, measure_type: string): Promise<string> {
+// ------------------- Obtendo medicao atraves da IA
+
+async function runGemini(base64Image: string, measure_type: string): Promise<string> {
   const model: GenerativeModel = genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
   });
 
-  const prompt: string = "Please provide the numerical reading of the " + measure_type + " meter in the image. Ignore any symbols or units. Note: The " + measure_type + " meter may have different designs and display formats. Please ensure the image is clear and focused on the meter's reading. Provide only the number, disregarding leading zeros.";
+  const prompt: string = `Please provide the numerical reading of the ${measure_type} meter in the image. Ignore any symbols or units. Note: The ${measure_type} meter may have different designs and display formats. Please ensure the image is clear and focused on the meter's reading. Provide only the number, disregarding leading zeros.`;
 
   const imagesParts: GenerativePart[] = [
     createGenerativePart(base64Image, "image/jpeg"),
@@ -53,6 +59,32 @@ async function run(base64Image: string, measure_type: string): Promise<string> {
   return text.toString();
 }
 
+// -------------------- Salvando a imagem em base64 em um arquivo
+function saveBase64Image(imageId: string, base64Data: string): string {
+  const imagePath = path.join(__dirname, 'images', `${imageId}.jpeg`);
+  const imageBuffer = Buffer.from(base64Data, 'base64');
+
+  // Cria a pasta "images" se ela não existir
+  fs.mkdirSync(path.dirname(imagePath), { recursive: true });
+
+  // Salva a imagem
+  fs.writeFileSync(imagePath, imageBuffer);
+
+  return imagePath;
+}
+
+// Função para gerar um link único para a imagem
+function generateImageLink(imageId: string, base64Data: string): string {
+  const imagePath = saveBase64Image(imageId, base64Data); // Salva a imagem e obtém o caminho
+  const expiresIn = 3600; // Link expira em 1 hora
+  const expiresAt = Date.now() + expiresIn * 1000;
+
+  // Retorna o link com a expiração configurada
+  return `http://localhost:${port}/image/${imageId}?expiresAt=${expiresAt}`;
+}
+
+
+// ------------------------ Endpoints
 
 // POST /upload
 app.post('/upload', upload.single('image'), async (req, res) => {
@@ -99,21 +131,32 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         image: base64Image,
         customer_code,
         measure_type,
-        measure_value: await run(base64Image, measure_type),
+        measure_value: await runGemini(base64Image, measure_type),
         confirmed_value: 0,
-        image_url: 'url da imagem'
+        image_url: 'url'
+      },
+    });
+
+    const imageId = newImage.measure_uuid.toString();
+    const image_url = generateImageLink(imageId, base64Image);
+
+    // Salva o link gerado no banco de dados
+    await prisma.image.update({
+      where: { measure_uuid: newImage.measure_uuid },
+      data: {
+        image_url,
       },
     });
 
     return res.status(200).json({
       measure_uuid: newImage.measure_uuid,
       measure_value: newImage.measure_value,
-      image_url: newImage.image_url,
+      image_url: image_url,
     });
   } catch (error) {
     return res.status(500).json({
       error_code: "SERVER_ERROR",
-      error_description: "Erro interno no servidor." + error,
+      error_description: `Erro interno no servidor. - ${error}`,
     });
   }
 });
@@ -167,7 +210,7 @@ app.patch('/confirm', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       error_code: "SERVER_ERROR",
-      error_description: "Erro interno no servidor." + error,
+      error_description: `Erro interno no servidor. - ${error}`,
     });
   }
 });
@@ -231,12 +274,34 @@ app.get('/:customer_code/list', async (req, res) => {
     // Retorna erro interno do servidor em caso de exceção
     return res.status(500).json({
       error_code: "SERVER_ERROR",
-      error_description: "Erro interno no servidor." + error,
+      error_description: `Erro interno no servidor. - ${error}`,
     });
   }
 });
 
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+// Retorna a imagem salva
+
+app.get('/image/:measure_uuid', (req, res) => {
+  const { measure_uuid } = req.params;
+  const expiresAt = parseInt(req.query.expiresAt as string, 10);
+
+  // Verifica se o link expirou
+  if (Date.now() > expiresAt) {
+    return res.status(410).send('Link expired');
+  }
+
+  const imagePath = path.join(__dirname, 'images', `${measure_uuid}.jpeg`);
+
+  // Envia a imagem se ela existir
+  if (fs.existsSync(imagePath)) {
+    res.sendFile(imagePath);
+  } else {
+    res.status(404).send('Image not found');
+  }
+});
+
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
