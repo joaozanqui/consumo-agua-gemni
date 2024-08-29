@@ -1,6 +1,7 @@
 # Projeto Docker-Node
 
-Aplicação para registrar inscrições de alunos em atividades.
+Backend de serviço de leitura de imagens utilizando a API do Google Gemini.
+
 ## Visão Geral
 
 Foi desenvolvido o back-end de um serviço que gerencia a leitura individualizada de consumo de água e gás. Para facilitar a coleta da informação, o serviço foi integrado com a API do Google Gemini para obter a medição através da foto de um medidor.
