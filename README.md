@@ -61,16 +61,10 @@ Para as requisições foi utilizado a ferramenta Insomnia.
         - Valor da medição retornado pela IA do Google Gemini
       - *image_url*: String
         - Link local gerado para acessar a imagem
-           
-<a href="https://beeimg.com/images/m51019978974.png" target="_blank">
-  <img src="https://beeimg.com/images/m51019978974.png" alt="" style="max-width:100%; height:auto;" />
-</a>
-
+     
 <a href="https://beeimg.com/images/m51019978974.png" target="_blank">
   <img src="https://beeimg.com/images/m51019978974.png" alt="" style="max-width: 100%; height: auto;">
 </a>
-
-
   
 2. **PATCH /confirm**: Responsável por confirmar ou corrigir o valor lido pelo Gemini.
 
@@ -85,7 +79,9 @@ Para as requisições foi utilizado a ferramenta Insomnia.
         - Resposta de OK, indicando que o valor foi salvo no banco de dados
 
           
-   ![.](https://beeimg.com/images/l62924280624.png)
+<a href="https://beeimg.com/images/l62924280624.png" target="_blank">
+  <img src="https://beeimg.com/images/l62924280624.png" alt="" style="max-width: 100%; height: auto;">
+</a>
 
 3. **GET /<customer_code>/list**: Retorna as medições registradas vinculadas ao customer_code
      - Response Body
@@ -100,15 +96,23 @@ Para as requisições foi utilizado a ferramenta Insomnia.
         - *image_url*: String
           - Link local gerado para acessar a imagem
            
-   ![.](https://beeimg.com/images/j48321972654.png)
+<a href="https://beeimg.com/images/j48321972654.png" target="_blank">
+  <img src="https://beeimg.com/images/j48321972654.png" alt="" style="max-width: 100%; height: auto;">
+</a>
 
 3. **GET /<customer_code>/list?measure_type=<measure_type>**: Retorna as medições registradas vinculadas ao customer_code filtradas apenas aos valores do tipo especificado 
-   ![.](https://beeimg.com/images/t55816534152.png)
-   
-4. **GET /image/measure_uuid**: Retorna a imagem referente ao índice measure_uuid
-     - Response Body
-     ![.](https://beeimg.com/images/m73802595972.png)
 
+<a href="https://beeimg.com/images/t55816534152.png" target="_blank">
+  <img src="https://beeimg.com/images/t55816534152.png" alt="" style="max-width: 100%; height: auto;">
+</a>
+
+4. **GET /image/measure_uuid**: Retorna a imagem referente ao índice measure_uuid
+     
+     - Response Body
+
+<a href="https://beeimg.com/images/m73802595972.png" target="_blank">
+  <img src="https://beeimg.com/images/m73802595972.png" alt="" style="max-width: 100%; height: auto;">
+</a>
 
 ## Tratamento de Erros
 
