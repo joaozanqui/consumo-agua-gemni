@@ -62,8 +62,9 @@ Para as requisições foi utilizado a ferramenta Insomnia.
       - *image_url*: String
         - Link local gerado para acessar a imagem
            
-   ![.](https://beeimg.com/images/m51019978974.png)
-
+<a href="https://beeimg.com/images/m51019978974.png" target="_blank">
+  <img src="https://beeimg.com/images/m51019978974.png" alt="Imagem Exemplo" style="max-width:100%; height:auto;" />
+</a>
   
 2. **PATCH /confirm**: Responsável por confirmar ou corrigir o valor lido pelo Gemini.
 
